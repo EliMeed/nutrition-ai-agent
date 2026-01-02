@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Set up Python
+        run: uv python install 3.10
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run tests
+        # We define a dummy key so the agent import doesn't crash in the cloud
+        env:
+          GOOGLE_API_KEY: "dummy_key_for_testing"
+          PYTHONPATH: .
+        run: uv run pytest
