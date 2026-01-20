@@ -1,8 +1,11 @@
 import sys
 import re
+import logfire
 from app.agents import recipe_agent
 from app.models import PhysicalProfile
 from pydantic import ValidationError
+
+logfire.configure()
 
 def parse_input(prompt: str, valid_units: list) -> tuple[float, str]:
     """Parses a string like '180 lbs' into (180.0, 'lbs')."""
@@ -90,16 +93,21 @@ def get_user_input() -> PhysicalProfile:
 
 def main():
     # 1. Collect user profile information
-    user = get_user_input()
+    with logfire.span("User Profile Setup"):
+        user = get_user_input()
+        logfire.info(f"Collected user profile: {user}")
 
     # 2. Get the specific request
-    user_request = input("\nWhat kind of recipe are you looking for today? ")
+    with logfire.span("User Recipe Request"):
+        user_request = input("\nWhat kind of recipe are you looking for today? ")
+        logfire.info(f"User request: {user_request}")
 
     # 3. Run the agent with the user's profile
     print("\nCooking up your personalized recipe... 👨‍🍳")
     try:
         result = recipe_agent.run_sync(user_request, deps=user)
         recipe = result.output
+        logfire.info(f"Generated recipe: {recipe.title}")
         
         print(f"\n✨ DONE! Here is your '{recipe.title}'")
         print(f"🔥 Calories: {recipe.total_calories} kcal")
@@ -121,4 +129,7 @@ def main():
         print(f"❌ Unexpected Error: {e}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        logfire.force_flush() 
