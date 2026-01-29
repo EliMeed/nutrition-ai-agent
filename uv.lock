@@ -22,6 +22,7 @@ dependencies = [
     { name = "httpx" },
     { name = "logfire" },
     { name = "pydantic-ai" },
+    { name = "python-dotenv" },
 ]
 
 [package.dev-dependencies]
@@ -35,6 +36,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "logfire", specifier = ">=4.16.0" },
     { name = "pydantic-ai", specifier = ">=1.39.0" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
 ]
 
 [package.metadata.requires-dev]
