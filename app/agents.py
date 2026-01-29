@@ -16,10 +16,23 @@ if not api_key:
 
 provider = GoogleProvider(api_key=api_key)
 
-model = GoogleModel(model_name='gemini-3-flash-preview', provider=provider)
+
+
+model_registry = {
+
+    "flash_3": GoogleModel(model_name='gemini-3-flash-preview', provider=provider),
+
+    "flash_2.5": GoogleModel(model_name='gemini-2.5-flash', provider=provider),
+    
+
+    "lite": GoogleModel(model_name='gemini-2.5-flash-lite', provider=provider),
+}
+
+current_model_key = "flash_2.5"
+
 # The agent returns a Recipe, but calculates the targets based on PhysicalProfile
 recipe_agent = Agent(
-    model,
+    model_registry[current_model_key],
     output_type=Recipe,
     deps_type=PhysicalProfile,
     system_prompt="You are a nutritionist AI. Start by using the 'calculate_targets' tool "
