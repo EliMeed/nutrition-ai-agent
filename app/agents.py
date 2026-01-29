@@ -1,10 +1,11 @@
 import os
+from dotenv import load_dotenv
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
 from .models import Recipe, PhysicalProfile
 
-
+load_dotenv()
 api_key = os.getenv('GOOGLE_API_KEY')
 
 if not api_key:
