@@ -75,8 +75,13 @@ def calculate_targets(profile: PhysicalProfile) -> dict:
     else:
         target = tdee
 
+    protein_g = round(profile.weight_kg * 2.0)
+    fat_g = round((tdee * 0.25) / 9)
+    carb_g = round((target - (protein_g * 4) - (fat_g * 9)) / 4)
+
     return {
         "daily_target_calories": round(target),
-        "protein_target_grams": round(profile.weight_kg * 2.0), # 2g of protein per kg of body weight
-        "fat_target_grams": round((target * 0.25) / 9)
+        "protein_target_grams": round(profile.weight_kg * 2.0), 
+        "fat_target_grams": round((target * 0.25) / 9), 
+        "carb_target_grams": max(0, carb_g),
     }
