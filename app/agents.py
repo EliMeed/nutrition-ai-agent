@@ -66,7 +66,7 @@ def calculate_targets(profile: PhysicalProfile) -> dict:
         "very_active": 1.725
     }
     tdee = bmr * multipliers[profile.activity_level]
-    
+
     # Goal Adjustment
     if profile.goal == "weight_loss":
         target = tdee - 500

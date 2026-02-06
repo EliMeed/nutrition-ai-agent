@@ -13,3 +13,6 @@ wheels/
 
 # Environment variables
 .env
+# Project wisdom & audit
+EVOLUTIONS.md
+docs/audit/
