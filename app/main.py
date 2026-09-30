@@ -95,12 +95,12 @@ def main():
     # 1. Collect user profile information
     with logfire.span("User Profile Setup"):
         user = get_user_input()
-        logfire.info(f"Collected user profile: {user}")
+        logfire.info("Profile collected")
 
     # 2. Get the specific request
     with logfire.span("User Recipe Request"):
         user_request = input("\nWhat kind of recipe are you looking for today? ")
-        logfire.info(f"User request: {user_request}")
+        logfire.info("Recipe request received")
 
     # 3. Run the agent with the user's profile
     print("\nCooking up your personalized recipe... 👨‍🍳")
