@@ -11,6 +11,7 @@ This public version is intentionally lean: a typed CLI app with explicit nutriti
 - Uses `Cunningham` when the user provides a credible body-fat estimate
 - Supports multiple units for weight and height, including `5 ft 10 in`
 - Generates one structured recipe matched to the calculated targets
+- Builds a meal from selected foods and calculates nutrition from the local food database
 - Starts each CLI session fresh without saving user history
 
 ## Why the architecture matters
@@ -60,6 +61,10 @@ GOOGLE_API_KEY=your_api_key_here
 
 ## Example flow
 
+Choose `Build a meal` to select foods and calculate their nutrition, or `Generate a recipe` for the AI recipe flow.
+
+### Recipe flow
+
 ```text
 --- MacroChef Public Demo ---
 Weight (e.g. 180 lbs): 180 lbs
@@ -90,16 +95,19 @@ What kind of recipe are you looking for today?
 app/
   agents.py       Recipe-generation agent
   main.py         CLI flow
+  meal_cli.py     Ingredient search and meal builder
   models.py       Typed data contracts
   nutrition.py    Deterministic nutrition logic
   pipeline/
     cnf.py        Read Canadian Nutrient File data
     load_cnf.py   Load food data into PostgreSQL
+    food_lookup.py  Food search and nutrient calculations
 sql/
   schema.sql      Database tables
 tests/
   test_models.py
   test_nutrition.py
+  test_meal_calculation.py
 ```
 
 ## Testing
