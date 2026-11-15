@@ -128,7 +128,7 @@ The food import is a separate pipeline today. The recipe agent does not yet quer
 
 ## Food data import
 
-The local pipeline reads Canadian Nutrient File CSVs and loads food and nutrient data into PostgreSQL. The CSVs are not included in this repository. Health Canada provides [CNF downloads](https://www.canada.ca/en/health-canada/services/food-nutrition/healthy-eating/nutrient-data/canadian-nutrient-file-about-us.html); confirm the dataset edition used before reproducing the import.
+The local pipeline reads Canadian Nutrient File CSVs and loads food and nutrient data into PostgreSQL. The CSVs are not included in this repository. The data used for development came from the [Canadian Nutrient File, 2015](https://www.canada.ca/en/health-canada/services/food-nutrition/healthy-eating/nutrient-data/canadian-nutrient-file-2015-download-files.html).
 
 Place these files in `data/cnf/`:
 
