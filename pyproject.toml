@@ -18,3 +18,10 @@ dev = [
     "pytest>=9.0.2",
     "pytest-dotenv>=0.5.2",
 ]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app", "app.*"]
