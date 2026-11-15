@@ -1,6 +1,6 @@
 # MacroChef
 
-MacroChef is a nutrition and recipe generator. It collects a user's profile, calculates calorie and macro targets deterministically in Python, then uses Gemini to generate a recipe that fits those targets.
+MacroChef is a nutrition and recipe generator. It collects a user's profile, calculates calorie and macro targets deterministically in Python, then uses Gemini to generate a recipe guided by those targets.
 
 This public version is intentionally lean: a typed CLI app with explicit nutrition logic and a constrained AI step at the end.
 
@@ -10,7 +10,8 @@ This public version is intentionally lean: a typed CLI app with explicit nutriti
 - Uses `Mifflin-St Jeor` by default
 - Uses `Cunningham` when the user provides a credible body-fat estimate
 - Supports multiple units for weight and height, including `5 ft 10 in`
-- Generates one structured recipe matched to the calculated targets
+- Generates a structured recipe using the calculated targets as guidance
+- Builds a meal from selected foods and calculates nutrition from the local food database
 - Starts each CLI session fresh without saving user history
 
 ## Why the architecture matters
@@ -60,29 +61,7 @@ GOOGLE_API_KEY=your_api_key_here
 
 ## Example flow
 
-```text
---- MacroChef Public Demo ---
-Weight (e.g. 180 lbs): 180 lbs
-Height (e.g. 180 cm, 70 in, 5 ft 10 in): 5 ft 10 in
-Age: 30
-
-Activity levels: sedentary, lightly active, moderately active, very active
-Activity level: moderately active
-Goal (lose, maintain, gain): gain
-Dietary restrictions (comma-separated, optional): peanuts
-Body fat % (optional, press Enter to skip): 15
-How was it measured? 1) DXA  2) Calipers  3) Smart scale  4) Visual estimate  5) Other
-Choose 1-5: 1
-
-Your targets
-Equation: cunningham (body_fat_based_estimate)
-Resting energy: 2186 kcal
-TDEE: 3388 kcal
-Target calories: 3688 kcal
-Macros: P 163g | C 477g | F 102g
-
-What kind of recipe are you looking for today?
-```
+Choose `Build a meal` to select foods and calculate their nutrition, or `Generate a recipe` for the AI recipe flow.
 
 ## Project structure
 
@@ -90,16 +69,19 @@ What kind of recipe are you looking for today?
 app/
   agents.py       Recipe-generation agent
   main.py         CLI flow
+  meal_cli.py     Ingredient search and meal builder
   models.py       Typed data contracts
   nutrition.py    Deterministic nutrition logic
   pipeline/
     cnf.py        Read Canadian Nutrient File data
     load_cnf.py   Load food data into PostgreSQL
+    food_lookup.py  Food search and nutrient calculations
 sql/
   schema.sql      Database tables
 tests/
   test_models.py
   test_nutrition.py
+  test_meal_calculation.py
 ```
 
 ## Testing
@@ -118,7 +100,7 @@ MacroChef calculates nutrition targets and generates recipes. The food data pipe
 - Generate a recipe using the existing AI agent.
 - Import Canadian Nutrient File foods, nutrient definitions, and nutrient amounts into a local PostgreSQL database.
 
-The food import is a separate pipeline today. The recipe agent does not yet query the imported database.
+The meal builder queries the imported food database. The recipe agent does not yet use it.
 
 ## In progress
 
