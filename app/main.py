@@ -8,6 +8,9 @@ from pydantic import ValidationError
 from app.agents import generate_recipe
 from app.models import NutritionContext, PhysicalProfile
 from app.nutrition import calculate_meal_targets, calculate_targets
+from rich.table import Table
+from rich.console import Console
+from app.meal_cli import build_meal
 
 os.environ.setdefault("LOGFIRE_SEND_TO_LOGFIRE", "false")
 logfire.configure(send_to_logfire=False)
@@ -127,7 +130,7 @@ def get_user_input() -> PhysicalProfile:
         activity_level = parse_activity("Activity level: ")
         goal = parse_goal("Goal (lose, maintain, gain): ")
         meals_per_day = parse_meals_per_day("Meals per day (1-6, Enter for 3): ")
-        restriction =input("Dietary restrictions (comma-separated, optional): ").strip()
+        restrictions =input("Dietary restrictions (comma-separated, optional): ").strip()
         dietary_restrictions = [item.strip() for item in restrictions.split(",") if item.strip()]
         body_fat_percentage, body_fat_source = parse_body_fat()
 
@@ -157,25 +160,25 @@ def print_targets(profile: PhysicalProfile) -> NutritionContext:
     targets = calculate_targets(profile)
     meal_targets = calculate_meal_targets(targets, profile.meals_per_day)
 
-    print("\nYour daily targets")
-    print(f"Equation: {targets.equation.equation} ({targets.equation.status})")
-    print(f"Resting energy: {targets.resting_energy} kcal")
-    print(f"TDEE: {targets.tdee} kcal")
-    print(f"Target calories: {targets.target_calories} kcal")
-    print(f"Macros: P {targets.protein}g | C {targets.carbs}g | F {targets.fats}g")
+    table = Table(title="Your Nutrition Profile")
+    table.add_column("Measure", style="cyan")
+    table.add_column("Daily", justify="right")
+    table.add_column("Per meal", justify="right")
+    table.add_row("Calories", f"{targets.target_calories} kcal", f"{meal_targets.target_calories:.1f} kcal")
+    table.add_row("Protein", f"{targets.protein} g", f"{meal_targets.protein:.1f} g")
+    table.add_row("Carbs", f"{targets.carbs} g", f"{meal_targets.carbs:.1f} g")
+    table.add_row("Fat", f"{targets.fats} g", f"{meal_targets.fats:.1f} g")
 
-    print("\nEstimated targets per meal")
-    print(f"Calories: {meal_targets.target_calories:.1f} kcal")
-    print(
-        f"Macros: P {meal_targets.protein:.1f}g | "
-        f"C {meal_targets.carbs:.1f}g | F {meal_targets.fats:.1f}g"
-    )
+    console = Console()
+    console.print(f"Equation: {targets.equation.equation} ({targets.equation.status})")
+    console.print(f"Resting energy: {targets.resting_energy} kcal | TDEE: {targets.tdee} kcal")
+    console.print(table)
 
     return NutritionContext(
         profile=profile, targets=targets, meal_targets=meal_targets
     )
 
-def main() -> None:
+def generate_recipe_flow() -> None:
     with logfire.span("User Profile Setup"):
         profile = get_user_input()
         context = print_targets(profile)
@@ -207,6 +210,22 @@ def main() -> None:
     except Exception as exc:
         print(f"Unexpected error: {exc}")
 
+def main() -> None:
+    while True:
+        print("\nMacroChef")
+        print("1. Build a meal")
+        print("2. Generate a recipe")
+        print("3. Exit")
+        choice = input("Choose an option: ").strip()
+
+        if choice == "1":
+            build_meal()
+        elif choice == "2":
+            generate_recipe_flow()
+        elif choice == "3":
+            return
+        else:
+            print("Please choose 1, 2, or 3.")
 
 if __name__ == "__main__":
     try:

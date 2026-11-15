@@ -11,7 +11,7 @@ load_dotenv()
 
 
 _model_registry: dict[str, GoogleModel] | None = None
-_current_model_key = "flash_2.5"
+_current_model_key = "flash_3.8"
 
 
 def _get_model_registry() -> dict[str, GoogleModel]:
@@ -27,6 +27,7 @@ def _get_model_registry() -> dict[str, GoogleModel]:
 
     provider = GoogleProvider(api_key=api_key)
     _model_registry = {
+        "flash_3.8": GoogleModel(model_name="gemini-3.8-flash", provider=provider),
         "flash_3": GoogleModel(model_name="gemini-3-flash-preview", provider=provider),
         "flash_2.5": GoogleModel(model_name="gemini-2.5-flash", provider=provider),
         "lite": GoogleModel(model_name="gemini-2.5-flash-lite", provider=provider),
