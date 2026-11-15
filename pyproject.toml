@@ -9,6 +9,8 @@ dependencies = [
     "logfire>=4.16.0",
     "pydantic-ai>=1.39.0",
     "python-dotenv>=1.2.1",
+    "psycopg[binary]>=3.3.9",
+
 ]
 
 [dependency-groups]
