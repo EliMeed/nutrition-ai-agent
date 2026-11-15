@@ -10,6 +10,7 @@ from app.models import NutritionContext, PhysicalProfile
 from app.nutrition import calculate_meal_targets, calculate_targets
 from rich.table import Table
 from rich.console import Console
+from app.meal_cli import build_meal
 
 os.environ.setdefault("LOGFIRE_SEND_TO_LOGFIRE", "false")
 logfire.configure(send_to_logfire=False)
@@ -177,7 +178,7 @@ def print_targets(profile: PhysicalProfile) -> NutritionContext:
         profile=profile, targets=targets, meal_targets=meal_targets
     )
 
-def main() -> None:
+def generate_recipe_flow() -> None:
     with logfire.span("User Profile Setup"):
         profile = get_user_input()
         context = print_targets(profile)
@@ -209,6 +210,22 @@ def main() -> None:
     except Exception as exc:
         print(f"Unexpected error: {exc}")
 
+def main() -> None:
+    while True:
+        print("\nMacroChef")
+        print("1. Build a meal")
+        print("2. Generate a recipe")
+        print("3. Exit")
+        choice = input("Choose an option: ").strip()
+
+        if choice == "1":
+            build_meal()
+        elif choice == "2":
+            generate_recipe_flow()
+        elif choice == "3":
+            return
+        else:
+            print("Please choose 1, 2, or 3.")
 
 if __name__ == "__main__":
     try:
