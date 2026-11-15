@@ -127,7 +127,7 @@ def get_user_input() -> PhysicalProfile:
         activity_level = parse_activity("Activity level: ")
         goal = parse_goal("Goal (lose, maintain, gain): ")
         meals_per_day = parse_meals_per_day("Meals per day (1-6, Enter for 3): ")
-        restriction =input("Dietary restrictions (comma-separated, optional): ").strip()
+        restrictions =input("Dietary restrictions (comma-separated, optional): ").strip()
         dietary_restrictions = [item.strip() for item in restrictions.split(",") if item.strip()]
         body_fat_percentage, body_fat_source = parse_body_fat()
 
