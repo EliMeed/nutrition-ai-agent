@@ -1,88 +1,64 @@
 import os
+
 from dotenv import load_dotenv
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
-from .models import Recipe, PhysicalProfile
+
+from .models import NutritionContext, Recipe
 
 load_dotenv()
-api_key = os.getenv('GOOGLE_API_KEY')
-
-if not api_key:
-    raise ValueError(
-        "❌ GOOGLE_API_KEY not found in environment. "
-        "Check your .env file and ensure you are using --env-file .env"
-    )
-
-provider = GoogleProvider(api_key=api_key)
 
 
+_model_registry: dict[str, GoogleModel] | None = None
+_current_model_key = "flash_2.5"
 
-model_registry = {
 
-    "flash_3": GoogleModel(model_name='gemini-3-flash-preview', provider=provider),
+def _get_model_registry() -> dict[str, GoogleModel]:
+    global _model_registry
+    if _model_registry is not None:
+        return _model_registry
 
-    "flash_2.5": GoogleModel(model_name='gemini-2.5-flash', provider=provider),
-    
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "GOOGLE_API_KEY not found in environment. Add it to your .env file before running the app."
+        )
 
-    "lite": GoogleModel(model_name='gemini-2.5-flash-lite', provider=provider),
-}
+    provider = GoogleProvider(api_key=api_key)
+    _model_registry = {
+        "flash_3": GoogleModel(model_name="gemini-3-flash-preview", provider=provider),
+        "flash_2.5": GoogleModel(model_name="gemini-2.5-flash", provider=provider),
+        "lite": GoogleModel(model_name="gemini-2.5-flash-lite", provider=provider),
+    }
+    return _model_registry
 
-current_model_key = "flash_2.5"
 
-# The agent returns a Recipe, but calculates the targets based on PhysicalProfile
 recipe_agent = Agent(
-    model_registry[current_model_key],
-    output_type=Recipe,
-    deps_type=PhysicalProfile,
-    system_prompt="You are a nutritionist AI. Start by using the 'calculate_targets' tool "
-        "to determine the user's daily needs. Then, create a recipe that "
-        "perfectly fits those calculated macros."
+   output_type=Recipe,
+    deps_type=NutritionContext,
+    system_prompt=(
+        "You create one practical recipe that matches the provided nutrition targets. "
+        "Do not recalculate calories or macros. Use the targets exactly as given."
+    ),
 )
 
+
 @recipe_agent.system_prompt
-def add_user_context(ctx: RunContext[PhysicalProfile]) -> str:
-    restrictions = ", ".join(ctx.deps.dietary_restrictions) if ctx.deps.dietary_restrictions else "none"
+def add_user_context(ctx: RunContext[NutritionContext]) -> str:
+    restrictions = ", ".join(ctx.deps.profile.dietary_restrictions) or "none"
     return (
-        f"The user's objective is {ctx.deps.goal}. "
-        f"They eat {ctx.deps.meals_per_day} meals per day. "
+        f"Per-meal target calories: {ctx.deps.meal_targets.target_calories:.1f}. "
+        f"Per-meal target macros: "
+        f"protein {ctx.deps.meal_targets.protein:.1f}g, "
+        f"carbs {ctx.deps.meal_targets.carbs:.1f}g, "
+        f"fats {ctx.deps.meal_targets.fats:.1f}g. "
+        f"Goal: {ctx.deps.profile.goal}. "
+        f"Meals per day: {ctx.deps.profile.meals_per_day}. "
         f"Strictly avoid: {restrictions}."
     )
 
-@recipe_agent.tool_plain
-def calculate_targets(profile: PhysicalProfile) -> dict:
-    """Calculates the exact BMR, TDEE, and goal-specific calorie/macro targets."""
-    # Mifflin-St Jeor Formula
-    if profile.gender == "male":
-        bmr = (10 * profile.weight_kg) + (6.25 * profile.height_cm) - (5 * profile.age) + 5
-    else:
-        bmr = (10 * profile.weight_kg) + (6.25 * profile.height_cm) - (5 * profile.age) - 161
-
-    # Activity Multipliers
-    multipliers = {
-        "sedentary": 1.2,
-        "lightly_active": 1.375,
-        "moderately_active": 1.55,
-        "very_active": 1.725
-    }
-    tdee = bmr * multipliers[profile.activity_level]
-
-    # Goal Adjustment
-    if profile.goal == "weight_loss":
-        target = tdee - 500
-    elif profile.goal == "muscle_gain":
-        target = tdee + 300
-    else:
-        target = tdee
-
-    protein_g = round(profile.weight_kg * 2.0)
-    fat_g = round((target * 0.25) / 9)
-    carb_g = round((target - (protein_g * 4) - (fat_g * 9)) / 4)
-
-    return {
-        "daily_target_calories": round(target),
-        "protein_target_grams": protein_g, 
-        "fat_target_grams": fat_g, 
-        #Prevent a negative carb target
-        "carb_target_grams": max(0, carb_g), 
-    }
+def generate_recipe(user_request: str, context: NutritionContext) -> Recipe:
+    model = _get_model_registry()[_current_model_key]
+    result = recipe_agent.run_sync(user_request, deps=context, model=model)
+    return result.output

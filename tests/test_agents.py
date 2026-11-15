@@ -1,22 +1,56 @@
-from app.agents import calculate_targets
-from app.models import PhysicalProfile
+from unittest.mock import Mock
 
-def test_calculate_targets_logic():
+from app import agents
+from app.models import NutritionContext, PhysicalProfile, Recipe
+from app.nutrition import calculate_meal_targets, calculate_targets
+
+
+def test_generate_recipe_passes_context_and_model(monkeypatch):
     profile = PhysicalProfile(
-        weight_value=100, # 100kg
+        weight_value=80,
         weight_unit="kg",
-        height_value=180, # 180cm
+        height_value=180,
         height_unit="cm",
         age=30,
         gender="male",
         activity_level="sedentary",
         goal="maintenance",
-        dietary_restrictions=[]
     )
     
-    results = calculate_targets(profile)
+    daily_targets = calculate_targets(profile)
+    meal_targets = calculate_meal_targets(daily_targets, profile.meals_per_day)
+    context = NutritionContext(
+        profile=profile,
+        targets=daily_targets,
+        meal_targets=meal_targets,
+    )
     
-    # BMR for 100kg, 180cm, 30yo Male = 2000 + 1125 - 150 + 5 = 2980
-    # Sedentary TDEE = 2980 * 1.2 = 3576
-    assert results["daily_target_calories"] > 2000
-    assert "protein_target_grams" in results
+    expected_recipe = Recipe(
+        title="Test recipe",
+        total_calories=500,
+        macros={"protein": 30, "carbs": 50, "fats": 18},
+        cooking_time=15,
+        ingredients=[],
+        instructions=[],
+    )
+
+    fake_model = object()
+    fake_run = Mock(return_value=Mock(output=expected_recipe))
+    monkeypatch.setattr(agents, "_get_model_registry", lambda: {"test": fake_model})
+    monkeypatch.setattr(agents, "_current_model_key", "test")
+    monkeypatch.setattr(agents.recipe_agent, "run_sync", fake_run)
+
+    result = agents.generate_recipe("Make a test meal", context)
+
+    fake_run.assert_called_once_with(
+        "Make a test meal", deps=context, model=fake_model
+    )
+
+    assert result == expected_recipe
+
+    prompt = agents.add_user_context(Mock(deps=context))
+
+    assert f"Per-meal target calories: {meal_targets.target_calories:.1f}" in prompt
+    assert f"protein {meal_targets.protein:.1f}g" in prompt
+    assert f"carbs {meal_targets.carbs:.1f}g" in prompt
+    assert f"fats {meal_targets.fats:.1f}g" in prompt

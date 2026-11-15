@@ -1,7 +1,7 @@
 [project]
-name = "ai-agent"
+name = "nutrition-ai-agent"
 version = "0.1.0"
-description = "An intelligent AI-powered nutritionist agent that generates personalized recipes based on physical profile, fitness goals, and dietary restrictions"
+description = "Stateless nutrition target calculation and AI recipe generation"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
