@@ -10,7 +10,7 @@ dependencies = [
     "pydantic-ai>=1.39.0",
     "python-dotenv>=1.2.1",
     "psycopg[binary]>=3.3.9",
-
+    "rich>=15.0.0",
 ]
 
 [dependency-groups]

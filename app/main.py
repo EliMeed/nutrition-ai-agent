@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from app.agents import generate_recipe
 from app.models import NutritionContext, PhysicalProfile
 from app.nutrition import calculate_meal_targets, calculate_targets
+from rich.table import Table
+from rich.console import Console
 
 os.environ.setdefault("LOGFIRE_SEND_TO_LOGFIRE", "false")
 logfire.configure(send_to_logfire=False)
@@ -157,19 +159,19 @@ def print_targets(profile: PhysicalProfile) -> NutritionContext:
     targets = calculate_targets(profile)
     meal_targets = calculate_meal_targets(targets, profile.meals_per_day)
 
-    print("\nYour daily targets")
-    print(f"Equation: {targets.equation.equation} ({targets.equation.status})")
-    print(f"Resting energy: {targets.resting_energy} kcal")
-    print(f"TDEE: {targets.tdee} kcal")
-    print(f"Target calories: {targets.target_calories} kcal")
-    print(f"Macros: P {targets.protein}g | C {targets.carbs}g | F {targets.fats}g")
+    table = Table(title="Your Nutrition Profile")
+    table.add_column("Measure", style="cyan")
+    table.add_column("Daily", justify="right")
+    table.add_column("Per meal", justify="right")
+    table.add_row("Calories", f"{targets.target_calories} kcal", f"{meal_targets.target_calories:.1f} kcal")
+    table.add_row("Protein", f"{targets.protein} g", f"{meal_targets.protein:.1f} g")
+    table.add_row("Carbs", f"{targets.carbs} g", f"{meal_targets.carbs:.1f} g")
+    table.add_row("Fat", f"{targets.fats} g", f"{meal_targets.fats:.1f} g")
 
-    print("\nEstimated targets per meal")
-    print(f"Calories: {meal_targets.target_calories:.1f} kcal")
-    print(
-        f"Macros: P {meal_targets.protein:.1f}g | "
-        f"C {meal_targets.carbs:.1f}g | F {meal_targets.fats:.1f}g"
-    )
+    console = Console()
+    console.print(f"Equation: {targets.equation.equation} ({targets.equation.status})")
+    console.print(f"Resting energy: {targets.resting_energy} kcal | TDEE: {targets.tdee} kcal")
+    console.print(table)
 
     return NutritionContext(
         profile=profile, targets=targets, meal_targets=meal_targets
