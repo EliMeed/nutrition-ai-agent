@@ -1,7 +1,13 @@
+import psycopg
 from app.pipeline.food_lookup import search_foods, calculate_food_macros, calculate_meal_macros
 
-
 def build_meal() -> None:
+    try:
+        _build_meal()
+    except psycopg.Error:
+        print("Unable to access the food database. Check that PostgreSQL is running and the food data is loaded, then try again.")
+
+def _build_meal() -> None:
     ingredients = []
     selected_foods = []
     while True:
