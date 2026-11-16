@@ -130,3 +130,12 @@ The import reports rejected rows and updates existing food–nutrient pairs on r
 ### Troubleshooting
 
 If the meal builder cannot access the food database, check that PostgreSQL is running and that the `macrochef` database, schema, and CNF data have been set up using the steps above. Check your PostgreSQL connection permissions if the problem continues.
+
+
+## Cooking instructions from selected foods
+
+Choose **Generate cooking instructions for selected foods** to search the Canadian Nutrient File, select foods and quantities, and generate cooking instructions. Nutrition totals are calculated from the selected foods; suggested additions are not included.
+
+This feature uses OpenRouter. Set `OPENROUTER_API_KEY` in your local `.env` file. Free model availability and limits may change. Keep API keys private.
+
+Check product labels against your dietary restrictions and allergies. AI-generated instructions are not a guarantee of allergen safety.
