@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openrouter import OpenRouterProvider
 
 from .models import NutritionContext, Recipe
 
@@ -62,4 +64,38 @@ def add_user_context(ctx: RunContext[NutritionContext]) -> str:
 def generate_recipe(user_request: str, context: NutritionContext) -> Recipe:
     model = _get_model_registry()[_current_model_key]
     result = recipe_agent.run_sync(user_request, deps=context, model=model)
+    return result.output
+
+# This agent writes instructions; Python remains responsible for nutrition totals.
+meal_instructions_agent = Agent(
+    output_type=str,
+    system_prompt=(
+        "Write a short recipe title and practical cooking instructions using "
+        "the selected foods and quantities. Water and standard cooking equipment "
+        "are allowed. Avoid the user's stated dietary restrictions. If a workable "
+        "recipe cannot be made with the selected foods, list necessary extra "
+        "ingredients separately under 'You would also need'. Do not include "
+        "unselected ingredients in the cooking steps without listing them there. "
+        "Do not invent nutrition values."
+    ),
+)
+
+def generate_meal_instructions(meal: dict) -> str:
+    ingredient_lines = "\n".join(
+        f"- {name}: {grams} g" for name, grams in meal["ingredients"]
+    )
+
+    prompt = (
+        "The user selected these foods from the Canadian Nutrient File:\n"
+        + ingredient_lines
+        + "\nDietary restrictions or allergies: "
+        + meal.get("restrictions", "none provided")
+    )
+
+    model = OpenAIChatModel(
+        'nvidia/nemotron-3.5-lightning:free',
+        provider=OpenRouterProvider(),
+        settings={'extra_body': {'reasoning': {'enabled': False}}, 'max_tokens': 1600},
+    )
+    result = meal_instructions_agent.run_sync(prompt, model=model)
     return result.output

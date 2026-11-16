@@ -5,12 +5,13 @@ import sys
 import logfire
 from pydantic import ValidationError
 
-from app.agents import generate_recipe
+from app.agents import generate_recipe, generate_meal_instructions
 from app.models import NutritionContext, PhysicalProfile
 from app.nutrition import calculate_meal_targets, calculate_targets
 from rich.table import Table
 from rich.console import Console
 from app.meal_cli import build_meal
+
 
 os.environ.setdefault("LOGFIRE_SEND_TO_LOGFIRE", "false")
 logfire.configure(send_to_logfire=False)
@@ -215,7 +216,8 @@ def main() -> None:
         print("\nMacroChef")
         print("1. Build a meal")
         print("2. Generate a recipe")
-        print("3. Exit")
+        print("3. Generate cooking instructions for selected foods")
+        print("4. Exit")
         choice = input("Choose an option: ").strip()
 
         if choice == "1":
@@ -223,9 +225,28 @@ def main() -> None:
         elif choice == "2":
             generate_recipe_flow()
         elif choice == "3":
+            meal = build_meal()
+            if meal is not None:
+                restrictions = input(
+                    "Dietary restrictions or allergies (comma-separated; Enter for none): "
+                ).strip()
+                meal["restrictions"] = restrictions or "none provided"
+                print("\nGenerating cooking instructions...")
+                try:
+                    instructions = generate_meal_instructions(meal)
+                    print("\nAI-generated cooking instructions:")
+                    print(instructions)
+                    print(
+                        "\nCheck product labels against your dietary restrictions and allergies. "
+                        "Nutrition totals cover only the selected foods and amounts; "
+                        "any suggested extras are not included."
+                    )
+                except Exception as exc:
+                    print(f"Could not generate instructions: {exc}")
+        elif choice == "4":
             return
         else:
-            print("Please choose 1, 2, or 3.")
+            print("Please choose 1, 2, 3, or 4.")
 
 if __name__ == "__main__":
     try:
