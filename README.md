@@ -126,3 +126,7 @@ python -m app.pipeline.load_cnf
 ```
 
 The import reports rejected rows and updates existing food–nutrient pairs on rerun. One row in the dataset used during development referenced nutrient ID 328, which was absent from the nutrient definitions.
+
+### Troubleshooting
+
+If the meal builder cannot access the food database, check that PostgreSQL is running and that the `macrochef` database, schema, and CNF data have been set up using the steps above. Check your PostgreSQL connection permissions if the problem continues.
