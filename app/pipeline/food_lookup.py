@@ -2,10 +2,12 @@
 import psycopg
 import re
 from decimal import Decimal, InvalidOperation
+from .database import connect_database
+
 
 
 def get_food_nutrient(food_id: int, nutrient_id: int) -> dict | None:
-    with psycopg.connect("dbname=macrochef") as conn:
+    with connect_database() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -45,14 +47,13 @@ def search_foods(name: str) -> list[tuple[int, str]]:
         base = word[:-1] if len(word) > 3 and word.lower().endswith("s") else word
         patterns.append(r"\m" + re.escape(base) + r"s?\M")
 
-    with psycopg.connect("dbname=macrochef") as conn:
+    with connect_database() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 f"SELECT food_id, name FROM foods WHERE {conditions} ORDER BY name LIMIT 30",
                 tuple(patterns),
             )
             return cur.fetchall()
-
 
 def calculate_food_macros(food_id: int, grams: str) -> dict:
     try:
