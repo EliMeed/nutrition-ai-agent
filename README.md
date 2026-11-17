@@ -89,6 +89,15 @@ tests/
 ```bash
 pytest
 ```
+### PostgreSQL integration test
+
+The integration test uses synthetic food data to check imports, invalid records, repeat imports, food lookup, and nutrition calculations against PostgreSQL. GitHub Actions runs it using a disposable PostgreSQL service.
+
+To run it locally, provide a separate PostgreSQL database named `macrochef_test` and set `MACROCHEF_TEST_DATABASE_URL` to its connection URL:
+
+```bash
+export MACROCHEF_TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/macrochef_test'
+uv run pytest tests/test_postgres_integration.py```
 
 ## Notes
 
