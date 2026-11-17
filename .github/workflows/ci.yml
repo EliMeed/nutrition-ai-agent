@@ -9,6 +9,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+        # A fresh database exists only for this CI job.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: macrochef_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d macrochef_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +38,9 @@ jobs:
         run: uv sync --dev
 
       - name: Run tests
-        # We define a dummy key so the agent import doesn't crash in the cloud
+    # We define a dummy key so the agent import doesn't crash in the cloud
         env:
           GOOGLE_API_KEY: "dummy_key_for_testing"
+          MACROCHEF_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/macrochef_test
           PYTHONPATH: .
         run: uv run pytest

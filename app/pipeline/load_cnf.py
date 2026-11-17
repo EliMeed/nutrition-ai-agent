@@ -3,12 +3,13 @@ import psycopg
 from .cnf import DATA_DIR
 from .cnf import load_foods
 from decimal import Decimal, InvalidOperation
+from .database import connect_database
 
 
 def load_foods_to_db() -> None:
     foods = load_foods()
 
-    with psycopg.connect("dbname=macrochef") as conn:
+    with connect_database() as conn:
         with conn.cursor() as cur:
             for food in foods:
                 cur.execute(
@@ -29,7 +30,7 @@ def load_nutrients_to_db() -> None:
     with path.open(encoding="cp1252", newline="") as file:
         nutrients = list(csv.DictReader(file))
 
-    with psycopg.connect("dbname=macrochef") as conn:
+    with connect_database() as conn:
         with conn.cursor() as cur:
             for nutrient in nutrients:
                 cur.execute(
@@ -53,7 +54,7 @@ def load_amounts_to_db() -> None:
     loaded = 0
     rejected = 0
 
-    with psycopg.connect("dbname=macrochef") as conn:
+    with connect_database() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT food_id FROM foods")
             food_ids = {row[0] for row in cur.fetchall()}
