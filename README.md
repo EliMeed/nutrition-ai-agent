@@ -97,7 +97,8 @@ To run it locally, provide a separate PostgreSQL database named `macrochef_test`
 
 ```bash
 export MACROCHEF_TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/macrochef_test'
-uv run pytest tests/test_postgres_integration.py```
+uv run pytest tests/test_postgres_integration.py
+```
 
 ## Notes
 
