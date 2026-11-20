@@ -1,0 +1,65 @@
+name: macrochef-reuse
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
+    ports:
+      - "127.0.0.1:${MACROCHEF_PORT:-8000}:8000"
+    environment:
+      MACROCHEF_DATABASE_URL: "${MACROCHEF_DATABASE_URL:-postgresql://macrochef_reader:local-demo-read@food-db:5432/macrochef}"
+      MACROCHEF_CATALOGUE: "${MACROCHEF_CATALOGUE:-fixture}"
+      MACROCHEF_CATALOGUE_REVISION: "${MACROCHEF_CATALOGUE_REVISION:-}"
+      RECIPE_STORE_URL: http://recipe-store:3000
+      GOOGLE_API_KEY: "${GOOGLE_API_KEY:-}"
+      MACROCHEF_GENERATION_ENABLED: "${MACROCHEF_GENERATION_ENABLED:-0}"
+    depends_on:
+      food-db:
+        condition: service_healthy
+      recipe-store:
+        condition: service_healthy
+  recipe-store:
+    build: ./recipe
+    environment:
+      RECIPE_DATABASE_URL: "postgresql://macrochef_recipe:recipe-local-demo@recipe-db:5432/macrochef_recipes"
+      HOST: "0.0.0.0"
+      PORT: "3000"
+    depends_on:
+      recipe-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+  recipe-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: macrochef_recipe
+      POSTGRES_PASSWORD: recipe-local-demo
+      POSTGRES_DB: macrochef_recipes
+    volumes:
+      - recipe_data:/var/lib/postgresql/data
+      - ./recipe/schema.sql:/docker-entrypoint-initdb.d/20-recipes.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "macrochef_recipe", "-d", "macrochef_recipes"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+  food-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local-demo-admin
+      POSTGRES_DB: macrochef
+    volumes:
+      - food_data:/var/lib/postgresql/data
+      - ./db/01-init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "macrochef"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+volumes:
+  food_data:
+  recipe_data:

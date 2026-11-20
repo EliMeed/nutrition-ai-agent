@@ -1,0 +1,12 @@
+**
+!app/
+!app/**
+!web/
+!web/backend/
+!web/backend/**
+!web/frontend/
+!web/frontend/dist/
+!web/frontend/dist/**
+**/__pycache__
+**/.env
+**/.env.*
