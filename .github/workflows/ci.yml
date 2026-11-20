@@ -43,4 +43,50 @@ jobs:
           GOOGLE_API_KEY: "dummy_key_for_testing"
           MACROCHEF_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/macrochef_test
           PYTHONPATH: .
-        run: uv run pytest
+        run: uv run pytest tests
+
+  web:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: macrochef_recipes_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d macrochef_recipes_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install API test dependencies
+        run: python -m pip install -r web/backend/requirements-test.txt
+      - name: Test FastAPI
+        working-directory: web
+        env:
+          PYTHONPATH: ..
+          MACROCHEF_GENERATION_ENABLED: "0"
+        run: python -m unittest discover -s backend -t .
+      - name: Test Node recipe storage against PostgreSQL
+        working-directory: web/recipe
+        env:
+          RECIPE_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/macrochef_recipes_test
+        run: |
+          npm ci
+          npm test
+      - name: Test and build React
+        working-directory: web/frontend
+        run: |
+          npm ci
+          npm test
+          npm run build
