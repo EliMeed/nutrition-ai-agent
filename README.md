@@ -1,8 +1,19 @@
 # MacroChef
 
-MacroChef is a nutrition and recipe generator. It collects a user's profile, calculates calorie and macro targets deterministically in Python, then uses Gemini to generate a recipe guided by those targets.
+Build a meal from ingredients you have, see its nutrition by weight, and use it as the starting point for a recipe. MacroChef calculates nutrition and personal targets in Python; the recipe model writes the recipe, not the nutrition math.
 
-This public version is intentionally lean: a typed CLI app with explicit nutrition logic and a constrained AI step at the end.
+## See it in action
+[Watch or download the 10-second walkthrough (MP4)](docs/images/macrochef-demo.mp4)
+
+**1. Build a meal.** Add chicken and rice by weight to see calories, protein, carbs, and fat for the combined meal.
+
+![MacroChef meal nutrition for 140 g of cooked chicken breast and 160 g of cooked white rice, totaling 439 kcal](docs/images/meal-nutrition.jpg)
+
+**2. Get a recipe idea.** Ask for a lemon and herb chicken rice bowl. The example shows a saved recipe with ingredients, steps, and its own estimated nutrition.
+
+![Saved lemon and herb chicken rice bowl with estimated nutrition, ingredients, and cooking instructions](docs/images/saved-recipe.jpg)
+
+The web app can reuse a recipe for an exact repeat request without calling the model again. See the [web setup and verification guide](web/README.md) to run this flow locally, or [service design](web/DESIGN.md) for the React, FastAPI, Node.js, and PostgreSQL boundaries.
 
 ## What it does
 
@@ -30,9 +41,10 @@ That keeps the system easier to reason about and reduces unnecessary model usage
 - Pydantic
 - pydantic-ai
 - Gemini via Google's API
-- pytest
+- React, FastAPI, Node.js, and PostgreSQL for the web app
+- pytest for the Python CLI
 
-## Run locally
+## Run the CLI locally
 
 ### With `uv`
 
@@ -59,7 +71,7 @@ Add your API key to `.env`:
 GOOGLE_API_KEY=your_api_key_here
 ```
 
-## Example flow
+## Example CLI flow
 
 Choose `Build a meal` to select foods and calculate their nutrition, or `Generate a recipe` for the AI recipe flow.
 
@@ -87,7 +99,7 @@ tests/
 ## Testing
 
 ```bash
-pytest
+uv run pytest tests
 ```
 ### PostgreSQL integration test
 
@@ -99,24 +111,6 @@ To run it locally, provide a separate PostgreSQL database named `macrochef_test`
 export MACROCHEF_TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/macrochef_test'
 uv run pytest tests/test_postgres_integration.py
 ```
-
-## Notes
-
-MacroChef calculates nutrition targets and generates recipes. The food data pipeline also loads Canadian Nutrient File data into a local PostgreSQL database. The recipe agent doesn’t query that database yet, and the app doesn’t currently save users’ meal histories.
-
-## Current capabilities
-
-- Calculate daily and per-meal nutrition targets from a physical profile.
-- Generate a recipe using the existing AI agent.
-- Import Canadian Nutrient File foods, nutrient definitions, and nutrient amounts into a local PostgreSQL database.
-
-The meal builder queries the imported food database. The recipe agent does not yet use it.
-
-## In progress
-
-- Document and verify a reproducible local setup for the food import.
-- Provide an API for querying the imported food data.
-- Connect the food data to the recipe workflow.
 
 ## Food data import
 

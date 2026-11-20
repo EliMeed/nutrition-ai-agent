@@ -13,7 +13,8 @@ Separate data stores keep the read-only nutrient catalogue apart from writable s
 Requires Node 22+, Python 3.11+, and PostgreSQL. Use a dedicated recipe database. **Do not apply the following schema to the existing imported food database.**
 
 ```bash
-# From this draft's root, with your new recipe database already provisioned:
+# From the repository root, with your recipe database already provisioned:
+cd web
 psql "$RECIPE_DATABASE_URL" -v ON_ERROR_STOP=1 -f recipe/schema.sql
 (cd recipe && npm ci)
 (cd frontend && npm ci && npm run build)
@@ -34,7 +35,7 @@ Only opt in to a live agent call by setting `MACROCHEF_GENERATION_ENABLED=1` and
 - `POST /api/recipes` is the only web endpoint that may generate. Its response contains the recipe, creation timestamp and a reuse flag.
 - Internally, Node exposes `GET /health`, and `GET` / `PUT /v1/recipes/{key}`. Only an explicit `404` from the lookup permits generation. An atomic insert preserves the first saved result for a key.
 
-Concurrent requests handled by separate API workers can both miss before either saves. The database still deduplicates the saved record, but a multi-worker deployment would need shared request coordination to guarantee a single billable model call for simultaneous misses. This local draft is not deployed.
+Concurrent requests handled by separate API workers can both miss before either saves. The database still deduplicates the saved record, but a multi-worker deployment would need shared request coordination to guarantee a single billable model call for simultaneous misses. These instructions are for a local setup.
 
 ### Seed a mock saved recipe without a model call
 
@@ -59,4 +60,4 @@ PYTHONPATH=.. .venv/bin/python -m unittest discover -s backend -t .
 git diff --check
 ```
 
-Use `RECIPE_TEST_DATABASE_URL` only with a disposable PostgreSQL database for the optional real SQL test. Tests cover multi-ingredient totals, profile validation, distinct recipe cache keys, fail-closed storage outage, Node persistence, and the browser API payload. An integration run against real PostgreSQL and a stub model verified: seed hit makes zero model calls; a miss calls the stub once; a repeated request and a Node restart reuse the same timestamp; a storage outage returns 503 without generating and does not break nutrition. No live model or Docker run was used for this verification. Before merging, verify the target checkout’s provider configuration and run its CI.
+Use `RECIPE_TEST_DATABASE_URL` only with a disposable PostgreSQL database for the optional real SQL test. Tests cover multi-ingredient totals, profile validation, distinct recipe cache keys, fail-closed storage outage, Node persistence, and the browser API payload. An integration run against real PostgreSQL and a stub model verified: seed hit makes zero model calls; a miss calls the stub once; a repeated request and a Node restart reuse the same timestamp; a storage outage returns 503 without generating and does not break nutrition. No live model or Docker run was used for this verification.
