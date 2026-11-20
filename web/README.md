@@ -41,8 +41,8 @@ Concurrent requests handled by separate API workers can both miss before either 
 In a second terminal, point the seed command at the running private recipe store:
 
 ```bash
-RECIPE_STORE_URL=http://127.0.0.1:3028 .venv/bin/python -m backend.seed_saved_recipe
-.venv/bin/python -m backend.seed_saved_recipe --print-request |
+PYTHONPATH=.. RECIPE_STORE_URL=http://127.0.0.1:3028 .venv/bin/python -m backend.seed_saved_recipe
+PYTHONPATH=.. .venv/bin/python -m backend.seed_saved_recipe --print-request |
   curl -sS -H 'Content-Type: application/json' -d @- http://127.0.0.1:8002/api/recipes
 ```
 
