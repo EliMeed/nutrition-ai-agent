@@ -3,7 +3,9 @@
 Build a meal from ingredients you have, see its nutrition by weight, and use it as the starting point for a recipe. MacroChef calculates nutrition and personal targets in Python; the recipe model writes the recipe, not the nutrition math.
 
 ## See it in action
-[Watch or download the 10-second walkthrough (MP4)](docs/images/macrochef-demo.mp4)
+[![MacroChef demo: build a meal, view its nutrition, and get a recipe idea. Open the full video.](docs/images/macrochef-demo.webp)](docs/images/macrochef-demo.mp4)
+
+[Open the full 10-second walkthrough (MP4)](docs/images/macrochef-demo.mp4)
 
 **1. Build a meal.** Add chicken and rice by weight to see calories, protein, carbs, and fat for the combined meal.
 
